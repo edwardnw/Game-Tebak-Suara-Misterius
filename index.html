@@ -3,111 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mystery Sound Quiz</title>
+    <title>Mystery Sound Quiz - Pro</title>
     <style>
         :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --dark: #1e293b;
-            --light: #f8fafc;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #818cf8;
+            --success: #10b981;
+            --error: #f43f5e;
+            --text: #f1f5f9;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
 
         body {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: var(--light);
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
         }
 
-        #game-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        #game-box {
+            background: var(--card);
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
+            border-radius: 24px;
             padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         /* Progress Bar */
-        .progress-container {
-            width: 100%;
+        .progress-wrapper {
             height: 8px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
-            margin-bottom: 2rem;
+            margin-bottom: 20px;
             overflow: hidden;
         }
-
-        #progress-fill {
+        #progress-bar {
             height: 100%;
             width: 0%;
-            background: var(--primary);
+            background: linear-gradient(90deg, var(--primary), #c084fc);
             transition: width 0.4s ease;
         }
 
-        /* Stats Section */
         .stats {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
             font-weight: bold;
-            font-size: 0.9rem;
             color: #94a3b8;
+            margin-bottom: 20px;
         }
 
-        /* Speaker Icon Animation */
-        .sound-icon {
-            font-size: 5rem;
+        /* Sound Area */
+        .speaker-zone {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
             cursor: pointer;
-            transition: transform 0.2s;
-            margin: 1.5rem 0;
-            display: inline-block;
-            filter: drop-shadow(0 0 15px var(--primary));
+            transition: all 0.3s;
+            text-align: center;
         }
-
-        .sound-icon:active { transform: scale(0.9); }
-        .pulse { animation: pulse-animation 1s infinite; }
-
-        @keyframes pulse-animation {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
+        .speaker-zone:hover { border-color: var(--primary); background: rgba(129, 140, 248, 0.1); }
+        .speaker-icon { font-size: 50px; display: block; margin-bottom: 10px; }
 
         /* Options Grid */
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-top: 2rem;
         }
 
-        .btn-option {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid transparent;
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
+        .opt-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text);
+            padding: 15px 10px;
+            border-radius: 15px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 14px;
             font-weight: 600;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
-        .btn-option:hover { background: rgba(255, 255, 255, 0.2); }
+        .opt-btn:active { transform: scale(0.95); }
 
-        /* Logic Colors */
-        .correct { background: var(--success) !important; transform: scale(1.05); }
-        .wrong { background: var(--danger) !important; animation: shake 0.4s; }
+        /* Animation Classes */
+        .correct { background: var(--success) !important; border-color: transparent; }
+        .wrong { background: var(--error) !important; border-color: transparent; animation: shake 0.4s; }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -115,161 +105,145 @@
             75% { transform: translateX(5px); }
         }
 
-        #result-screen { display: none; }
-
-        .btn-restart {
+        .hidden { display: none; }
+        .final-score { font-size: 4rem; color: var(--primary); margin: 20px 0; }
+        
+        .retry-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
-            margin-top: 1.5rem;
-            cursor: pointer;
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
             font-weight: bold;
-        }
-
-        /* Desktop Responsive */
-        @media (min-width: 768px) {
-            #game-container { padding: 3rem; }
-            .btn-option { font-size: 1.1rem; }
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div id="game-container">
+<div id="game-box">
     <div id="quiz-screen">
-        <div class="progress-container">
-            <div id="progress-fill"></div>
-        </div>
-        
+        <div class="progress-wrapper"><div id="progress-bar"></div></div>
         <div class="stats">
-            <span>Soal: <span id="current-count">1</span>/<span id="total-count">5</span></span>
-            <span>Skor: <span id="score">0</span></span>
+            <span id="label-step">SOAL 1/5</span>
+            <span id="label-score">SKOR: 0</span>
         </div>
 
-        <h3>Suara apakah ini?</h3>
-        <div id="play-btn" class="sound-icon" onclick="playSound()">🔊</div>
-        <p style="font-size: 0.8rem; color: #94a3b8;">Klik ikon speaker untuk mendengar</p>
+        <h3 style="text-align: center; margin-bottom: 20px;">Suara apakah ini?</h3>
 
-        <div class="options-grid" id="options">
+        <div class="speaker-zone" onclick="playCurrentVoice()">
+            <span class="speaker-icon" id="spk-icon">🔊</span>
+            <small style="opacity: 0.6;">Ketuk untuk dengar</small>
+        </div>
+
+        <div class="options-grid" id="container-opsi">
             </div>
     </div>
 
-    <div id="result-screen">
-        <h2 style="font-size: 2rem; margin-bottom: 1rem;">Selesai! 🎉</h2>
-        <p>Skor Akhir Kamu:</p>
-        <h1 id="final-score" style="font-size: 4rem; color: var(--primary);">0</h1>
-        <button class="btn-restart" onclick="restartGame()">Main Lagi</button>
+    <div id="result-screen" class="hidden" style="text-align: center;">
+        <h2>Game Selesai! 🎉</h2>
+        <div class="final-score" id="score-akhir">0</div>
+        <p style="margin-bottom: 25px; opacity: 0.7;">Bagus sekali! Ingin coba lagi?</p>
+        <button class="retry-btn" onclick="startNewGame()">Main Lagi</button>
     </div>
 </div>
 
 <script>
-    // Database Soal (Menggunakan Emoji sebagai visual cue dan Synthesis untuk suara)
-    const questions = [
-        { name: "Kucing", sound: "Meow", options: ["Anjing", "Kucing", "Harimau", "Singa"] },
-        { name: "Telepon", sound: "Ring ring", options: ["Bel", "Telepon", "Alarm", "Siren"] },
-        { name: "Hujan", sound: "Shhh splash", options: ["Angin", "Api", "Hujan", "Air Terjun"] },
-        { name: "Mobil", sound: "Vroom vroom", options: ["Motor", "Mobil", "Pesawat", "Kereta"] },
-        { name: "Hantu", sound: "Booo", options: ["Angin", "Hantu", "Burung", "Serigala"] }
+    // Data Soal
+    const database = [
+        { q: "Anjing", s: "woof woof bark", o: ["Kucing", "Anjing", "Serigala", "Sapi"] },
+        { q: "Singa", s: "roar roar", o: ["Singa", "Harimau", "Beruang", "Kucing"] },
+        { q: "Siren", s: "wee woo wee woo", o: ["Telepon", "Alarm", "Siren", "Hujan"] },
+        { q: "Pesawat", s: "shhhhhhh zoom", o: ["Mobil", "Motor", "Angin", "Pesawat"] },
+        { q: "Hantu", s: "booooooooo", o: ["Hantu", "Burung", "Angin", "Bayi"] }
     ];
 
-    let currentQuestionIndex = 0;
+    let currentQuest = 0;
     let score = 0;
-    let canAnswer = true;
+    let lock = false;
 
-    const quizScreen = document.getElementById('quiz-screen');
-    const resultScreen = document.getElementById('result-screen');
-    const optionsContainer = document.getElementById('options');
-    const progressFill = document.getElementById('progress-fill');
-    const playBtn = document.getElementById('play-btn');
-
-    function initGame() {
-        currentQuestionIndex = 0;
-        score = 0;
-        canAnswer = true;
-        quizScreen.style.display = 'block';
-        resultScreen.style.display = 'none';
-        updateStats();
-        loadQuestion();
-    }
-
-    function loadQuestion() {
-        canAnswer = true;
-        const q = questions[currentQuestionIndex];
+    // Fungsi Utama: Load Soal
+    function loadStep() {
+        lock = false;
+        const data = database[currentQuest];
         
-        // Update UI
-        document.getElementById('current-count').innerText = currentQuestionIndex + 1;
-        document.getElementById('total-count').innerText = questions.length;
-        
-        // Progress Bar
-        const progress = ((currentQuestionIndex) / questions.length) * 100;
-        progressFill.style.width = `${progress}%`;
+        // 1. Update Progress & Teks
+        document.getElementById('progress-bar').style.width = (currentQuest / database.length * 100) + "%";
+        document.getElementById('label-step').innerText = `SOAL ${currentQuest + 1}/${database.length}`;
+        document.getElementById('label-score').innerText = `SKOR: ${score}`;
 
-        // Render Options
-        optionsContainer.innerHTML = '';
-        q.options.sort(() => Math.random() - 0.5).forEach(opt => {
+        // 2. Generate Tombol Opsi (Inilah yang membuat pilihan muncul)
+        const grid = document.getElementById('container-opsi');
+        grid.innerHTML = ""; // Bersihkan tombol lama
+
+        data.o.forEach(pilihan => {
             const btn = document.createElement('button');
-            btn.className = 'btn-option';
-            btn.innerText = opt;
-            btn.onclick = () => checkAnswer(opt, btn);
-            optionsContainer.appendChild(btn);
+            btn.className = 'opt-btn';
+            btn.innerText = pilihan;
+            btn.onclick = () => checkTarget(pilihan, btn);
+            grid.appendChild(btn);
         });
     }
 
-    function playSound() {
-        playBtn.classList.add('pulse');
-        const msg = new SpeechSynthesisUtterance();
-        msg.text = questions[currentQuestionIndex].sound;
-        msg.lang = 'en-US'; // Suara onomatope lebih baik dalam bahasa inggris
-        msg.rate = 0.8;
+    // Fungsi Suara
+    function playCurrentVoice() {
+        const icon = document.getElementById('spk-icon');
+        icon.style.transform = "scale(1.2)";
         
-        window.speechSynthesis.speak(msg);
+        const voice = new SpeechSynthesisUtterance(database[currentQuest].s);
+        voice.lang = 'en-US';
+        window.speechSynthesis.speak(voice);
         
-        msg.onend = () => playBtn.classList.remove('pulse');
+        voice.onend = () => icon.style.transform = "scale(1)";
     }
 
-    function checkAnswer(selected, btn) {
-        if (!canAnswer) return;
-        canAnswer = false;
+    // Logika Jawaban
+    function checkTarget(dipilih, element) {
+        if (lock) return;
+        lock = true;
 
-        const correct = questions[currentQuestionIndex].name;
+        const benar = database[currentQuest].q;
 
-        if (selected === correct) {
+        if (dipilih === benar) {
+            element.classList.add('correct');
             score += 20;
-            btn.classList.add('correct');
-            document.getElementById('score').innerText = score;
         } else {
-            btn.classList.add('wrong');
-            // Beri tahu yang mana yang benar
-            Array.from(optionsContainer.children).forEach(b => {
-                if (b.innerText === correct) b.classList.add('correct');
+            element.classList.add('wrong');
+            // Tandai mana yang benar
+            Array.from(document.querySelectorAll('.opt-btn')).forEach(b => {
+                if(b.innerText === benar) b.classList.add('correct');
             });
         }
 
+        // Pindah soal setelah 1.5 detik
         setTimeout(() => {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
-                loadQuestion();
+            currentQuest++;
+            if (currentQuest < database.length) {
+                loadStep();
             } else {
-                showResults();
+                finishGame();
             }
         }, 1500);
     }
 
-    function showResults() {
-        progressFill.style.width = `100%`;
-        quizScreen.style.display = 'none';
-        resultScreen.style.display = 'block';
-        document.getElementById('final-score').innerText = score;
+    function finishGame() {
+        document.getElementById('progress-bar').style.width = "100%";
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('score-akhir').innerText = score;
     }
 
-    function restartGame() {
-        initGame();
+    function startNewGame() {
+        currentQuest = 0;
+        score = 0;
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+        loadStep();
     }
 
-    // Jalankan Game
-    initGame();
+    // Jalankan pertama kali saat halaman dibuka
+    window.onload = loadStep;
 </script>
 
 </body>
