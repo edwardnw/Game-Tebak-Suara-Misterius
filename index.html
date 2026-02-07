@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Sound Quiz</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: var(--light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #game-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--primary);
+            transition: width 0.4s ease;
+        }
+
+        /* Stats Section */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* Speaker Icon Animation */
+        .sound-icon {
+            font-size: 5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 1.5rem 0;
+            display: inline-block;
+            filter: drop-shadow(0 0 15px var(--primary));
+        }
+
+        .sound-icon:active { transform: scale(0.9); }
+        .pulse { animation: pulse-animation 1s infinite; }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 2rem;
+        }
+
+        .btn-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-option:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Logic Colors */
+        .correct { background: var(--success) !important; transform: scale(1.05); }
+        .wrong { background: var(--danger) !important; animation: shake 0.4s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        #result-screen { display: none; }
+
+        .btn-restart {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Desktop Responsive */
+        @media (min-width: 768px) {
+            #game-container { padding: 3rem; }
+            .btn-option { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="quiz-screen">
+        <div class="progress-container">
+            <div id="progress-fill"></div>
+        </div>
+        
+        <div class="stats">
+            <span>Soal: <span id="current-count">1</span>/<span id="total-count">5</span></span>
+            <span>Skor: <span id="score">0</span></span>
+        </div>
+
+        <h3>Suara apakah ini?</h3>
+        <div id="play-btn" class="sound-icon" onclick="playSound()">🔊</div>
+        <p style="font-size: 0.8rem; color: #94a3b8;">Klik ikon speaker untuk mendengar</p>
+
+        <div class="options-grid" id="options">
+            </div>
+    </div>
+
+    <div id="result-screen">
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">Selesai! 🎉</h2>
+        <p>Skor Akhir Kamu:</p>
+        <h1 id="final-score" style="font-size: 4rem; color: var(--primary);">0</h1>
+        <button class="btn-restart" onclick="restartGame()">Main Lagi</button>
+    </div>
+</div>
+
+<script>
+    // Database Soal (Menggunakan Emoji sebagai visual cue dan Synthesis untuk suara)
+    const questions = [
+        { name: "Kucing", sound: "Meow", options: ["Anjing", "Kucing", "Harimau", "Singa"] },
+        { name: "Telepon", sound: "Ring ring", options: ["Bel", "Telepon", "Alarm", "Siren"] },
+        { name: "Hujan", sound: "Shhh splash", options: ["Angin", "Api", "Hujan", "Air Terjun"] },
+        { name: "Mobil", sound: "Vroom vroom", options: ["Motor", "Mobil", "Pesawat", "Kereta"] },
+        { name: "Hantu", sound: "Booo", options: ["Angin", "Hantu", "Burung", "Serigala"] }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let canAnswer = true;
+
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const optionsContainer = document.getElementById('options');
+    const progressFill = document.getElementById('progress-fill');
+    const playBtn = document.getElementById('play-btn');
+
+    function initGame() {
+        currentQuestionIndex = 0;
+        score = 0;
+        canAnswer = true;
+        quizScreen.style.display = 'block';
+        resultScreen.style.display = 'none';
+        updateStats();
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        canAnswer = true;
+        const q = questions[currentQuestionIndex];
+        
+        // Update UI
+        document.getElementById('current-count').innerText = currentQuestionIndex + 1;
+        document.getElementById('total-count').innerText = questions.length;
+        
+        // Progress Bar
+        const progress = ((currentQuestionIndex) / questions.length) * 100;
+        progressFill.style.width = `${progress}%`;
+
+        // Render Options
+        optionsContainer.innerHTML = '';
+        q.options.sort(() => Math.random() - 0.5).forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-option';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt, btn);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function playSound() {
+        playBtn.classList.add('pulse');
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = questions[currentQuestionIndex].sound;
+        msg.lang = 'en-US'; // Suara onomatope lebih baik dalam bahasa inggris
+        msg.rate = 0.8;
+        
+        window.speechSynthesis.speak(msg);
+        
+        msg.onend = () => playBtn.classList.remove('pulse');
+    }
+
+    function checkAnswer(selected, btn) {
+        if (!canAnswer) return;
+        canAnswer = false;
+
+        const correct = questions[currentQuestionIndex].name;
+
+        if (selected === correct) {
+            score += 20;
+            btn.classList.add('correct');
+            document.getElementById('score').innerText = score;
+        } else {
+            btn.classList.add('wrong');
+            // Beri tahu yang mana yang benar
+            Array.from(optionsContainer.children).forEach(b => {
+                if (b.innerText === correct) b.classList.add('correct');
+            });
+        }
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }, 1500);
+    }
+
+    function showResults() {
+        progressFill.style.width = `100%`;
+        quizScreen.style.display = 'none';
+        resultScreen.style.display = 'block';
+        document.getElementById('final-score').innerText = score;
+    }
+
+    function restartGame() {
+        initGame();
+    }
+
+    // Jalankan Game
+    initGame();
+</script>
+
+</body>
+</html>
